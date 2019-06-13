@@ -109,22 +109,26 @@ public class StockXact implements StreamApplication {
                 .map((KV m) -> getBuyer(m))
                 .sendTo(imStreamOut3);
 
-        imStreamIn2.join(imStreamIn3, new JoinFunction<String, String, String, String>(){
-            @Override
-            public String apply(String buyerMsg, String sellerMsg) {
-                return "test";
-            }
+        MessageStream<String> buyer = imStreamIn2.map(KV::getValue);
+        MessageStream<String> seller = imStreamIn3.map(KV::getValue);
 
-            @Override
-            public String getFirstKey(String buyerMsg) {
-                return "test";
-            }
-            @Override
-            public String getSecondKey(String sellerMsg) {
-                return "test";
-            }
-        }, serde, serde, serde, Duration.ofMinutes(3), "join")
-        .sendTo(outputStream);
+        buyer
+            .join(seller, new JoinFunction<String, String, String, String>(){
+                @Override
+                public String apply(String buyerMsg, String sellerMsg) {
+                    return "test";
+                }
+
+                @Override
+                public String getFirstKey(String buyerMsg) {
+                    return "test";
+                }
+                @Override
+                public String getSecondKey(String sellerMsg) {
+                    return "test";
+                }
+            }, serde, serde, serde, Duration.ofMinutes(3), "join")
+            .sendTo(outputStream);
     }
 
     private KV<String, String> getBuyer(KV m) {
