@@ -83,7 +83,7 @@ public class SSEGenerator {
 //                textList.add(sCurrentLine);
 //            }
 
-            interval = 1000000000/1;
+            interval = 1000000000/5;
             start = System.nanoTime();
 
             while ((sCurrentLine = br.readLine()) != null) {
