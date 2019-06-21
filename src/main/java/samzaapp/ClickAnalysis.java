@@ -114,12 +114,12 @@ public class ClickAnalysis implements StreamApplication, Serializable {
         }
     }
 
-//    public static void main(String[] args) {
-//        CommandLine cmdLine = new CommandLine();
-//        OptionSet options = cmdLine.parser().parse(args);
-//        Config config = cmdLine.loadConfig(options);
-//        LocalApplicationRunner runner = new LocalApplicationRunner(new ClickAnalysis(), config);
-//        runner.run();
-//        runner.waitForFinish();
-//    }
+    public static void main(String[] args) {
+        CommandLine cmdLine = new CommandLine();
+        OptionSet options = cmdLine.parser().parse(args);
+        Config config = cmdLine.loadConfig(options);
+        LocalApplicationRunner runner = new LocalApplicationRunner(new ClickAnalysis(), config);
+        runner.run();
+        runner.waitForFinish();
+    }
 }

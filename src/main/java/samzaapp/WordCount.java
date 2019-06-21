@@ -39,6 +39,16 @@ public class WordCount implements StreamApplication {
     private static final String INPUT_STREAM_ID_2 = "map-output";
     private static final String OUTPUT_STREAM_ID = "word-count-output";
     private static final String OUTPUT_STREAM_ID2 = "map-output";
+    private static final String INPUT_STREAM_ID_3 = "map-output-2";
+    private static final String OUTPUT_STREAM_ID3 = "map-output-2";
+
+    private static final int Order_No = 0;
+    private static final int Tran_Maint_Code = 1;
+    private static final int Order_Price = 8;
+    private static final int Order_Exec_Vol = 9;
+    private static final int Order_Vol = 10;
+    private static final int Sec_Code = 11;
+    private static final int Trade_Dir = 22;
 
     @Override
     public void describe(StreamApplicationDescriptor streamApplicationDescriptor) {
@@ -65,85 +75,56 @@ public class WordCount implements StreamApplication {
                 kafkaSystemDescriptor.getOutputDescriptor(OUTPUT_STREAM_ID2,
                         serde);
 
+//        KafkaInputDescriptor<KV<String, String>> inputDescriptor3 =
+//                kafkaSystemDescriptor.getInputDescriptor(INPUT_STREAM_ID_3,
+//                        serde);
+//
+//        KafkaOutputDescriptor<KV<String, String>> outputDescriptor3 =
+//                kafkaSystemDescriptor.getOutputDescriptor(OUTPUT_STREAM_ID3,
+//                        serde);
+
         MessageStream<KV<String, String>> lines = streamApplicationDescriptor.getInputStream(inputDescriptor);
         OutputStream<KV<String, String>> counts = streamApplicationDescriptor.getOutputStream(outputDescriptor);
         MessageStream<KV<String, String>> lines2 = streamApplicationDescriptor.getInputStream(inputDescriptor2);
         OutputStream<KV<String, String>> counts2 = streamApplicationDescriptor.getOutputStream(outputDescriptor2);
+//        MessageStream<KV<String, String>> lines3 = streamApplicationDescriptor.getInputStream(inputDescriptor3);
+//        OutputStream<KV<String, String>> counts3 = streamApplicationDescriptor.getOutputStream(outputDescriptor3);
 
-//    JoinFunction<? extends K, ? super M, ? super OM, ? extends JM> joinFn
-//        JoinFunction<String, KV<String, String>, KV<String, String>, KV<String, String>> joinFunc =
-//                new JoinFunction<String, KV<String, String>, KV<String, String>, KV<String, String>>() {
-//                    @Override
-//                    public KV<String, String> apply(KV<String, String> lines, KV<String, String> lines2) {
-//                        return KV.of(lines.getKey()+lines2.getKey(), lines.getValue()+lines.getValue());
-//                    }
-//
-//                    @Override
-//                    public String getFirstKey(KV<String, String> lines) {
-//                        return lines.getKey();
-//                    }
-//
-//                    @Override
-//                    public String getSecondKey(KV<String, String> lines2) {
-//                        return lines2.getKey();
-//                    }
-//                };
 
-//        lines
-////                .partitionBy(m -> {System.out.println("bbbbb"); return m.key;}, m -> m.value, KVSerde.of(new StringSerde(), new StringSerde()), "p1")
-//                .map(kv -> {
-//                    System.out.println("hahahahah");
-//                    return kv.value;
-//                })
-//                .flatMap(s -> {return Arrays.asList(s.split("\\W+"));})
-//                .window(Windows.keyedSessionWindow(
-//                        w -> w, Duration.ofSeconds(5), () -> 0, (m, prevCount) -> prevCount + 1,
-//                        new StringSerde(), new IntegerSerde()), "count")
-//                .map(windowPane ->
-//                        KV.of(windowPane.getKey().getKey(),
-//                                windowPane.getKey().getKey() + ": " + windowPane.getMessage().toString()))
-////        .join(lines2, joinFunc, new StringSerde(), KVSerde.of(new StringSerde(), new StringSerde()), KVSerde.of(new StringSerde(), new StringSerde()), Duration.ofSeconds(5), "join")
-//                .sendTo(counts);
         lines
                 .map(kv -> {
+                    long start = System.currentTimeMillis();
+                    while (System.currentTimeMillis() - start < 10) {}
                     System.out.println("stage1");
                     return kv;
                 })
-//                .map(kv -> {
-//                    System.out.println("stage2");
-//                    return kv;
-//                })
+                .map(kv -> {
+                    String[] orderArr = kv.getValue().split("\\|");
+                    return KV.of(orderArr[Order_No], orderArr[Order_Vol]);
+                })
                 .sendTo(counts2);
+
+//        lines2.map(kv -> {
+//            long start = System.currentTimeMillis();
+//            while (System.currentTimeMillis() - start < 10) {}
+//            return kv;
+//        }).sendTo(counts3);
 
         lines2
                 .map(kv -> {
+                    long start = System.currentTimeMillis();
+                    while (System.currentTimeMillis() - start < 10) {}
                     System.out.println("stage2");
                     return kv;
                 })
 //                .flatMap(s -> Arrays.asList(s.split("\\W+")))
-//                .window(Windows.keyedSessionWindow(
-//                        w -> w, Duration.ofSeconds(5), () -> 0, (m, prevCount) -> prevCount + 1,
-//                        new StringSerde(), new IntegerSerde()), "count")
-//                .map(windowPane ->
-//                        KV.of(windowPane.getKey().getKey(),
-//                                windowPane.getKey().getKey() + ": " + windowPane.getMessage().toString()))
+                .window(Windows.keyedSessionWindow(
+                        w -> w.getValue(), Duration.ofSeconds(5), () -> 0, (m, prevCount) -> prevCount + 1,
+                        new StringSerde(), new IntegerSerde()), "count")
+                .map(windowPane ->
+                        KV.of(windowPane.getKey().getKey(),
+                                windowPane.getKey().getKey() + ": " + windowPane.getMessage().toString()))
                 .sendTo(counts);
-
-//        lines
-//                .map(kv -> {
-//                    return KV.of(kv.getKey(), kv.getValue().split("\\|")[0]);
-//                })
-//                .map(kv -> {
-//                    return kv.value;
-//                })
-//                .flatMap(s -> Arrays.asList(s.split("\\W+")))
-//                .window(Windows.keyedSessionWindow(
-//                        w -> w, Duration.ofSeconds(5), () -> 0, (m, prevCount) -> prevCount + 1,
-//                        new StringSerde(), new IntegerSerde()), "count")
-//                .map(windowPane ->
-//                        KV.of(windowPane.getKey().getKey(),
-//                                windowPane.getKey().getKey() + ": " + windowPane.getMessage().toString()))
-//                .sendTo(counts);
     }
 
 //    public static void main(String[] args) {
@@ -151,8 +132,8 @@ public class WordCount implements StreamApplication {
 //        OptionSet options = cmdLine.parser().parse(args);
 //        Config config = cmdLine.loadConfig(options);
 //        Map<String, String> mergedConfig = new HashMap<>(config);
-//        mergedConfig.put("splitPart", String.valueOf(0));
-//        mergedConfig.put("job.name", "word-count"+0);
+//        mergedConfig.put("splitPart", String.valueOf(1));
+//        mergedConfig.put("job.name", "wrd-count"+1);
 //        Config newConfig = Util.rewriteConfig(new MapConfig(mergedConfig));
 //        LocalApplicationRunner runner = new LocalApplicationRunner(new WordCount(), newConfig);
 //        runner.run();
