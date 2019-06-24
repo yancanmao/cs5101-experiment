@@ -1,4 +1,4 @@
-package samzaapp;
+package samzaapp.ad;
 
 import java.io.Serializable;
 
@@ -20,11 +20,11 @@ import org.apache.samza.runtime.LocalApplicationRunner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.samza.util.CommandLine;
-import org.apache.samza.util.Util;
 import org.apache.samza.config.Config;
+import samzaapp.ad.AdClick;
+import samzaapp.ad.PageView;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

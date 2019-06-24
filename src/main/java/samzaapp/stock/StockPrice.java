@@ -1,4 +1,4 @@
-package samzaapp;
+package samzaapp.stock;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

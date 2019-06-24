@@ -1,4 +1,4 @@
-package samzaapp;
+package samzaapp.stock;
 
 import java.util.Map;
 import java.util.HashMap;;

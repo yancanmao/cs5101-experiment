@@ -1,4 +1,4 @@
-package samzaapp;
+package samzaapp.stock;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.util.*;
 
 import joptsimple.OptionSet;
+import org.apache.commons.math3.random.RandomDataGenerator;
 import org.apache.samza.application.StreamApplication;
 import org.apache.samza.application.descriptors.StreamApplicationDescriptor;
 import org.apache.samza.config.Config;
@@ -50,7 +51,7 @@ public class StockAnalysis implements StreamApplication {
     private static final int MINIMAL_PRICE = 10;
 
     private static final String INPUT_STREAM_ID = "stock_order";
-        private static final String INPUT_STREAM_ID_2 = "im_stream";
+    private static final String INPUT_STREAM_ID_2 = "im_stream";
     private static final String OUTPUT_STREAM_ID2 = "im_stream";
     private static final String OUTPUT_STREAM_ID = "stock";
 
@@ -85,12 +86,14 @@ public class StockAnalysis implements StreamApplication {
         OutputStream<KV<String, String>> imStreamOut = streamApplicationDescriptor.getOutputStream(outputDescriptor2);
         OutputStream<KV<String, String>> outputStream = streamApplicationDescriptor.getOutputStream(outputDescriptor);
 
+        RandomDataGenerator messageGenerator = new RandomDataGenerator();
         // "transactor"
         inputStream
             .map(order -> {
-                Random ra =new Random();
+                Double number = messageGenerator.nextGaussian(10, 1);
+                int delay = number.intValue();
                 long start = System.currentTimeMillis();
-                while (System.currentTimeMillis() - start < ra.nextInt(5) + 10){}
+                while (System.currentTimeMillis() - start < delay + 10){}
                 return order;
             }).sendTo(imStreamOut);
 

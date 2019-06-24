@@ -1,4 +1,6 @@
-package samzaapp;
+package samzaapp.stock;
+
+import samzaapp.stock.Order;
 
 import java.util.*;
 

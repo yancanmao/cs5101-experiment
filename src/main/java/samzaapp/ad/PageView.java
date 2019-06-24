@@ -1,4 +1,4 @@
-package samzaapp;
+package samzaapp.ad;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 

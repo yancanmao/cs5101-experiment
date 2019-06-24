@@ -3,10 +3,8 @@ package samzaapp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import joptsimple.OptionSet;
 import org.apache.samza.application.StreamApplication;
 import org.apache.samza.application.descriptors.StreamApplicationDescriptor;
@@ -39,8 +37,6 @@ public class WordCount implements StreamApplication {
     private static final String INPUT_STREAM_ID_2 = "map-output";
     private static final String OUTPUT_STREAM_ID = "word-count-output";
     private static final String OUTPUT_STREAM_ID2 = "map-output";
-    private static final String INPUT_STREAM_ID_3 = "map-output-2";
-    private static final String OUTPUT_STREAM_ID3 = "map-output-2";
 
     private static final int Order_No = 0;
     private static final int Tran_Maint_Code = 1;
@@ -75,48 +71,35 @@ public class WordCount implements StreamApplication {
                 kafkaSystemDescriptor.getOutputDescriptor(OUTPUT_STREAM_ID2,
                         serde);
 
-//        KafkaInputDescriptor<KV<String, String>> inputDescriptor3 =
-//                kafkaSystemDescriptor.getInputDescriptor(INPUT_STREAM_ID_3,
-//                        serde);
-//
-//        KafkaOutputDescriptor<KV<String, String>> outputDescriptor3 =
-//                kafkaSystemDescriptor.getOutputDescriptor(OUTPUT_STREAM_ID3,
-//                        serde);
-
         MessageStream<KV<String, String>> lines = streamApplicationDescriptor.getInputStream(inputDescriptor);
         OutputStream<KV<String, String>> counts = streamApplicationDescriptor.getOutputStream(outputDescriptor);
         MessageStream<KV<String, String>> lines2 = streamApplicationDescriptor.getInputStream(inputDescriptor2);
         OutputStream<KV<String, String>> counts2 = streamApplicationDescriptor.getOutputStream(outputDescriptor2);
-//        MessageStream<KV<String, String>> lines3 = streamApplicationDescriptor.getInputStream(inputDescriptor3);
-//        OutputStream<KV<String, String>> counts3 = streamApplicationDescriptor.getOutputStream(outputDescriptor3);
 
 
         lines
-                .map(kv -> {
-                    long start = System.currentTimeMillis();
-                    while (System.currentTimeMillis() - start < 10) {}
-                    System.out.println("stage1");
-                    return kv;
-                })
-                .map(kv -> {
-                    String[] orderArr = kv.getValue().split("\\|");
-                    return KV.of(orderArr[Order_No], orderArr[Order_Vol]);
-                })
+//                .map(kv -> {
+//                    long start = System.currentTimeMillis();
+//                    while (System.currentTimeMillis() - start < 10) {}
+////                    System.out.println("stage1");
+//                    return kv;
+//                })
+                .map(kv->kv.getValue())
+                .flatMap(s -> Arrays.asList(s.split("\\|")))
+//                .map(kv -> {
+//                    String[] orderArr = kv.getValue().split("\\|");
+//                    return KV.of(orderArr[Order_No], orderArr[Order_Vol]);
+//                })
+                .map(v -> KV.of(String.valueOf(System.currentTimeMillis()), v))
                 .sendTo(counts2);
 
-//        lines2.map(kv -> {
-//            long start = System.currentTimeMillis();
-//            while (System.currentTimeMillis() - start < 10) {}
-//            return kv;
-//        }).sendTo(counts3);
-
         lines2
-                .map(kv -> {
-                    long start = System.currentTimeMillis();
-                    while (System.currentTimeMillis() - start < 10) {}
-                    System.out.println("stage2");
-                    return kv;
-                })
+//                .map(kv -> {
+//                    long start = System.currentTimeMillis();
+//                    while (System.currentTimeMillis() - start < 10) {}
+////                    System.out.println("stage2");
+//                    return kv;
+//                })
 //                .flatMap(s -> Arrays.asList(s.split("\\W+")))
                 .window(Windows.keyedSessionWindow(
                         w -> w.getValue(), Duration.ofSeconds(5), () -> 0, (m, prevCount) -> prevCount + 1,

@@ -26,7 +26,7 @@ public class SSEGenerator {
     public SSEGenerator(String input) {
         TOPIC = input;
         Properties props = new Properties();
-        props.put("bootstrap.servers", "localhost:9092");
+        props.put("bootstrap.servers", "alligator-sane.d2.comp.nus.edu.sg:9092");
         props.put("client.id", "ProducerExample");
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
@@ -50,40 +50,8 @@ public class SSEGenerator {
         try {
             stream = new FileReader("/root/SSE-kafka-producer/"+file+".txt");
             br = new BufferedReader(stream);
-//            Thread.sleep(10000);
-//            while ((sCurrentLine = br.readLine()) != null) {
-//                if (sCurrentLine.equals("end")) {
-//                    counter++;
-//                }
-//                if (counter == speed) {
-//                    start = System.nanoTime();
-//                    interval = 1000000000/textList.size();
-//                    for (int i=0; i<textList.size(); i++) {
-//                        cur = System.nanoTime();
-//                        if (textList.get(i).split("\\|").length < 10) {
-//                            continue;
-//                        }
-////                        StringBuilder key = new StringBuilder(textList.get(i).split("\\|")[Sec_Code]);
-////                        key.append("|");
-////                        long tmstmp = System.currentTimeMillis();
-////                        key.append(tmstmp);
-//                        ProducerRecord<String, String> newRecord = new ProducerRecord<>(TOPIC, textList.get(i).split("\\|")[Sec_Code], textList.get(i));
-//                        producer.send(newRecord);
-////                        producer.flush();
-////                        while ((System.nanoTime() - cur) < interval) {}
-//                    }
-//                    //}
-//                    System.out.println("size:"+String.valueOf(textList.size()));
-//                    System.out.println("time:"+String.valueOf((System.nanoTime() - start)/1000000));
-//                    System.out.println("interval:"+String.valueOf((System.nanoTime() - start)/(textList.size())));
-//                    textList.clear();
-//                    counter = 0;
-//                    continue;
-//                }
-//                textList.add(sCurrentLine);
-//            }
 
-            interval = 1000000000/5;
+            interval = 1000000000/150;
             start = System.nanoTime();
 
             while ((sCurrentLine = br.readLine()) != null) {
