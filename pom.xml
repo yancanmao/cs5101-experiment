@@ -125,7 +125,8 @@
     <properties>
         <!-- maven specific properties -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <samza.version>1.0.0</samza.version>
+        <!--<samza.version>1.0.0</samza.version>-->
+        <samza.version>1.0.0-SplitGraph</samza.version>
         <hadoop.version>2.6.1</hadoop.version>
     </properties>
 
@@ -204,7 +205,10 @@
                 <configuration>
                     <descriptors>
                         <descriptor>src/main/assembly/src.xml</descriptor>
-                    </descriptors>
+		    </descriptors>
+		    <descriptorRefs>
+			    <descriptorRef>jar-with-dependencies</descriptorRef>
+		    </descriptorRefs>
                 </configuration>
                 <executions>
                     <execution>
