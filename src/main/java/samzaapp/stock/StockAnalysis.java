@@ -114,32 +114,32 @@ public class StockAnalysis implements StreamApplication {
                 return order;
             }).sendTo(imStreamOut);
 
-        //  movingAverage
-        imStreamIn
-            .map(order -> {
-                String[] orderArr = order.getValue().split("\\|");
-                return new KV(order.getKey(), orderArr);
-            })
-            .map(this::movingAverage)
-            .sendTo(outputStream);
-
-        // composite index
-        imStreamIn
-            .map(order -> {
-                String[] orderArr = order.getValue().split("\\|");
-                return new KV(order.getKey(), orderArr);
-            })
-            .map(this::compositeIndex)
-            .sendTo(outputStream);
-
-        // price alarm
-        imStreamIn
-            .map(order -> {
-                String[] orderArr = order.getValue().split("\\|");
-                return new KV(order.getKey(), orderArr);
-            })
-            .map(this::priceAlarm)
-            .sendTo(outputStream);
+//        //  movingAverage
+//        imStreamIn
+//            .map(order -> {
+//                String[] orderArr = order.getValue().split("\\|");
+//                return new KV(order.getKey(), orderArr);
+//            })
+//            .map(this::movingAverage)
+//            .sendTo(outputStream);
+//
+//        // composite index
+//        imStreamIn
+//            .map(order -> {
+//                String[] orderArr = order.getValue().split("\\|");
+//                return new KV(order.getKey(), orderArr);
+//            })
+//            .map(this::compositeIndex)
+//            .sendTo(outputStream);
+//
+//        // price alarm
+//        imStreamIn
+//            .map(order -> {
+//                String[] orderArr = order.getValue().split("\\|");
+//                return new KV(order.getKey(), orderArr);
+//            })
+//            .map(this::priceAlarm)
+//            .sendTo(outputStream);
 
         // fraud detection
         imStreamIn
