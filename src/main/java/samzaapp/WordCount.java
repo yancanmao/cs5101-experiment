@@ -73,8 +73,8 @@ public class WordCount implements StreamApplication {
 
         MessageStream<KV<String, String>> lines = streamApplicationDescriptor.getInputStream(inputDescriptor);
         OutputStream<KV<String, String>> counts = streamApplicationDescriptor.getOutputStream(outputDescriptor);
-        MessageStream<KV<String, String>> lines2 = streamApplicationDescriptor.getInputStream(inputDescriptor2);
-        OutputStream<KV<String, String>> counts2 = streamApplicationDescriptor.getOutputStream(outputDescriptor2);
+//        MessageStream<KV<String, String>> lines2 = streamApplicationDescriptor.getInputStream(inputDescriptor2);
+//        OutputStream<KV<String, String>> counts2 = streamApplicationDescriptor.getOutputStream(outputDescriptor2);
 
 
         lines
@@ -91,8 +91,8 @@ public class WordCount implements StreamApplication {
 //                    return KV.of(orderArr[Order_No], orderArr[Order_Vol]);
 //                })
                 .map(v -> KV.of(String.valueOf(System.currentTimeMillis()), v))
-                .sendTo(counts2);
-        lines2
+//                .sendTo(counts2);
+//        lines2
 //                .map(kv -> {
 //                    long start = System.currentTimeMillis();
 //                    while (System.currentTimeMillis() - start < 10) {}
