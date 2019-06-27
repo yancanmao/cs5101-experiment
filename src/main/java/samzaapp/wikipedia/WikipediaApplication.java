@@ -76,10 +76,16 @@ public class WikipediaApplication implements StreamApplication, Serializable {
   private static final Map<String, String> KAFKA_DEFAULT_STREAM_CONFIGS = ImmutableMap.of("replication.factor", "1");
 
   private static final String WIKIPEDIA_CHANNEL = "wikipedia";;
+  public static final String WIKINEWS_CHANNEL = "wikinews";
+  public static final String WIKTIONARY_CHANNEL = "wiktionary";
   private static final String OUTPUT_CHANNEL = "wikipedia-stats";
 
-  private static final String INPUT_STREAM_IM = "im_stream";
-  private static final String OUTPUT_STREAM_IM = "im_stream";
+  private static final String INPUT_STREAM_IM_1 = "im_stream_1";
+  private static final String OUTPUT_STREAM_IM_1 = "im_stream_1";
+  private static final String INPUT_STREAM_IM_2 = "im_stream_2";
+  private static final String OUTPUT_STREAM_IM_2 = "im_stream_2";
+  private static final String INPUT_STREAM_IM_3 = "im_stream_3";
+  private static final String OUTPUT_STREAM_IM_3 = "im_stream_3";
 
   @Override
   public void describe(StreamApplicationDescriptor appDescriptor) {
@@ -99,29 +105,68 @@ public class WikipediaApplication implements StreamApplication, Serializable {
 
     KafkaInputDescriptor<WikipediaEvent> wikipediaInputDescriptor =
             kafkaSystemDescriptor.getInputDescriptor(WIKIPEDIA_CHANNEL, wikipediaSerde);
-    MessageStream<WikipediaEvent> allWikipediaEvents = appDescriptor.getInputStream(wikipediaInputDescriptor);
+
+    KafkaInputDescriptor<WikipediaEvent> wikinewsInputDescriptor =
+            kafkaSystemDescriptor.getInputDescriptor(WIKINEWS_CHANNEL, wikipediaSerde);
+
+    KafkaInputDescriptor<WikipediaEvent> wiktionaryInputDescriptor =
+            kafkaSystemDescriptor.getInputDescriptor(WIKTIONARY_CHANNEL, wikipediaSerde);
+
+    MessageStream<WikipediaEvent> wikipediaEvents = appDescriptor.getInputStream(wikipediaInputDescriptor);
+    MessageStream<WikipediaEvent> wikinewsEvents = appDescriptor.getInputStream(wikinewsInputDescriptor);
+    MessageStream<WikipediaEvent> wiktionaryEvents = appDescriptor.getInputStream(wiktionaryInputDescriptor);
 
     KafkaOutputDescriptor<WikipediaStatsOutput> statsOutputDescriptor =
         kafkaSystemDescriptor.getOutputDescriptor(OUTPUT_CHANNEL, new JsonSerdeV2<>(WikipediaStatsOutput.class));
     OutputStream<WikipediaStatsOutput> wikipediaStats = appDescriptor.getOutputStream(statsOutputDescriptor);
 
+    KafkaInputDescriptor<KV<String, WikipediaEvent>> inputDescriptor1 =
+            kafkaSystemDescriptor.getInputDescriptor(INPUT_STREAM_IM_1, serde);
+
+    KafkaOutputDescriptor<KV<String, WikipediaEvent>> outputDescriptor1 =
+            kafkaSystemDescriptor.getOutputDescriptor(OUTPUT_STREAM_IM_1, serde);
+
     KafkaInputDescriptor<KV<String, WikipediaEvent>> inputDescriptor2 =
-            kafkaSystemDescriptor.getInputDescriptor(INPUT_STREAM_IM, serde);
+            kafkaSystemDescriptor.getInputDescriptor(INPUT_STREAM_IM_2, serde);
 
     KafkaOutputDescriptor<KV<String, WikipediaEvent>> outputDescriptor2 =
-            kafkaSystemDescriptor.getOutputDescriptor(OUTPUT_STREAM_IM, serde);
+            kafkaSystemDescriptor.getOutputDescriptor(OUTPUT_STREAM_IM_2, serde);
+
+    KafkaInputDescriptor<KV<String, WikipediaEvent>> inputDescriptor3 =
+            kafkaSystemDescriptor.getInputDescriptor(INPUT_STREAM_IM_3, serde);
+
+    KafkaOutputDescriptor<KV<String, WikipediaEvent>> outputDescriptor3 =
+            kafkaSystemDescriptor.getOutputDescriptor(OUTPUT_STREAM_IM_3, serde);
 
 
-    MessageStream<KV<String, WikipediaEvent>> imStreamIn = appDescriptor.getInputStream(inputDescriptor2);
-    OutputStream<KV<String, WikipediaEvent>> imStreamOut = appDescriptor.getOutputStream(outputDescriptor2);
+    MessageStream<KV<String, WikipediaEvent>> imStreamIn1 = appDescriptor.getInputStream(inputDescriptor1);
+    OutputStream<KV<String, WikipediaEvent>> imStreamOut1 = appDescriptor.getOutputStream(outputDescriptor1);
+    MessageStream<KV<String, WikipediaEvent>> imStreamIn2 = appDescriptor.getInputStream(inputDescriptor2);
+    OutputStream<KV<String, WikipediaEvent>> imStreamOut2 = appDescriptor.getOutputStream(outputDescriptor2);
+    MessageStream<KV<String, WikipediaEvent>> imStreamIn3 = appDescriptor.getInputStream(inputDescriptor3);
+    OutputStream<KV<String, WikipediaEvent>> imStreamOut3 = appDescriptor.getOutputStream(outputDescriptor3);
+
+    wikipediaEvents.map(this::preprocess).sendTo(imStreamOut1);
+    wikinewsEvents.map(this::preprocess).sendTo(imStreamOut2);
+    wiktionaryEvents.map(this::preprocess).sendTo(imStreamOut3);
+
+    // Merge inputs
+    MessageStream<WikipediaEvent> allWikipediaEvents =
+            MessageStream.mergeAll(ImmutableList.of(
+                    imStreamIn1.map(KV::getValue),
+                    imStreamIn2.map(KV::getValue),
+                    imStreamIn3.map(KV::getValue)));
+
+//      MessageStream<WikipediaEvent> allWikipediaEvents =
+//              MessageStream.mergeAll(ImmutableList.of(
+//                      wikipediaEvents.map(this::preprocess).map(KV::getValue),
+//                      wikinewsEvents.map(this::preprocess).map(KV::getValue),
+//                      wiktionaryEvents.map(this::preprocess).map(KV::getValue)));
 
     // Parse, update stats, prepare output, and send
     allWikipediaEvents
-        .map(this::preprocess)
-        .sendTo(imStreamOut);
-    imStreamIn
         .map(kv -> {
-          return WikipediaParser.parseEvent(kv.getValue());
+          return WikipediaParser.parseEvent(kv);
         })
         .window(Windows.tumblingWindow(windowDuration,
             WikipediaStats::new, new WikipediaStatsAggregator(), WikipediaStats.serde()), "statsWindow")
@@ -156,6 +201,15 @@ public class WikipediaApplication implements StreamApplication, Serializable {
 
     @Override
     public WikipediaStats apply(Map<String, Object> edit, WikipediaStats stats) {
+
+      RandomDataGenerator messageGenerator = new RandomDataGenerator();
+      Double number = messageGenerator.nextGaussian(3, 1);
+      int delay = number.intValue();
+      long start = System.currentTimeMillis();
+      while (System.currentTimeMillis() - start < delay + 1){}
+
+//    long start = System. nanoTime();
+//    while (System.nanoTime() - start < (delay*100000 + 1000000)){}
 
       // Update persisted total
       Integer editsAllTime = store.get(EDIT_COUNT_KEY);
@@ -196,10 +250,10 @@ public class WikipediaApplication implements StreamApplication, Serializable {
 
   private KV<String, WikipediaEvent> preprocess(WikipediaEvent wikipediaEvent){
     RandomDataGenerator messageGenerator = new RandomDataGenerator();
-    Double number = messageGenerator.nextGaussian(10, 1);
+    Double number = messageGenerator.nextGaussian(5, 1);
     int delay = number.intValue();
-    long start = System.currentTimeMillis();
-    while (System.currentTimeMillis() - start < delay + 5){}
+    long start = System. nanoTime();
+    while (System.nanoTime() - start < (delay*100000 + 500000)){}
     return new KV(String.valueOf(start), wikipediaEvent);
   }
 

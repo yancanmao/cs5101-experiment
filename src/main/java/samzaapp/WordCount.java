@@ -92,7 +92,6 @@ public class WordCount implements StreamApplication {
 //                })
                 .map(v -> KV.of(String.valueOf(System.currentTimeMillis()), v))
                 .sendTo(counts2);
-
         lines2
 //                .map(kv -> {
 //                    long start = System.currentTimeMillis();

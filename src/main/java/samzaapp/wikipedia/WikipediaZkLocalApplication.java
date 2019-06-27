@@ -21,8 +21,13 @@ package samzaapp.wikipedia;
 
 import joptsimple.OptionSet;
 import org.apache.samza.config.Config;
+import org.apache.samza.config.MapConfig;
 import org.apache.samza.runtime.LocalApplicationRunner;
 import org.apache.samza.util.CommandLine;
+import org.apache.samza.util.Util;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -43,9 +48,12 @@ public class WikipediaZkLocalApplication {
     CommandLine cmdLine = new CommandLine();
     OptionSet options = cmdLine.parser().parse(args);
     Config config = cmdLine.loadConfig(options);
-
+    Map<String, String> mergedConfig = new HashMap<>(config);
+    mergedConfig.put("splitPart", String.valueOf(1));
+    mergedConfig.put("job.name", "wikipedia"+1);
+    Config newConfig = Util.rewriteConfig(new MapConfig(mergedConfig));
     WikipediaApplication app = new WikipediaApplication();
-    LocalApplicationRunner runner = new LocalApplicationRunner(app, config);
+    LocalApplicationRunner runner = new LocalApplicationRunner(app, newConfig);
     runner.run();
     runner.waitForFinish();
   }

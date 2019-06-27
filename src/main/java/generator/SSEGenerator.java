@@ -51,7 +51,7 @@ public class SSEGenerator {
             stream = new FileReader("/root/SSE-kafka-producer/"+file+".txt");
             br = new BufferedReader(stream);
 
-            interval = 1000000000/150;
+            interval = 1000000000/200;
             start = System.nanoTime();
 
             while ((sCurrentLine = br.readLine()) != null) {

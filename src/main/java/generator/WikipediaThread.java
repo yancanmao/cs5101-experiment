@@ -1,13 +1,7 @@
 package generator;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
-import scala.io.StdIn;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -16,26 +10,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-public class WikipediaGenerator {
+public class WikipediaThread implements Runnable {
+
     private String TOPIC;
-
     private static KafkaProducer<String, String> producer;
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public WikipediaGenerator(String input) {
-        TOPIC = input;
+    public WikipediaThread(String input, String brokers) {
+        this.TOPIC = input;
         Properties props = new Properties();
-        props.put("bootstrap.servers", "localhost:9092");
+        props.put("bootstrap.servers", brokers);
         props.put("client.id", "ProducerExample");
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 //        props.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
-        producer = new KafkaProducer<>(props);
-
+        this.producer = new KafkaProducer<>(props);
     }
 
-    public void generate(String file, int speed) throws InterruptedException {
-
+    @Override
+    public void run() {
         String sCurrentLine;
         List<String> textList = new ArrayList<>();
         FileReader stream = null;
@@ -51,21 +43,16 @@ public class WikipediaGenerator {
                 stream = new FileReader("/home/myc/workspace/cs5101-experiment/src/main/java/generator/wikipedia-raw.json");
                 br = new BufferedReader(stream);
 
-                interval = 1000000000 / 10;
+                interval = 1000000000 / 90;
                 start = System.nanoTime();
 
                 while ((sCurrentLine = br.readLine()) != null) {
                     cur = System.nanoTime();
-
-//                    ObjectNode pageViewEvent = wikipediaEvent(sCurrentLine);
-//                    JSONObject wiki = new JSONObject(sCurrentLine);
-//                    ProducerRecord<String, byte[]> newRecord = new ProducerRecord<>(TOPIC, String.valueOf(System.currentTimeMillis()), wiki.toString().getBytes());
                     ProducerRecord<String,String> newRecord = new ProducerRecord<>(TOPIC, String.valueOf(System.currentTimeMillis()), sCurrentLine);
                     producer.send(newRecord);
                     counter++;
 
-                    while ((System.nanoTime() - cur) < interval) {
-                    }
+                    while ((System.nanoTime() - cur) < interval) {}
                     if (System.nanoTime() - start >= 1000000000) {
                         System.out.println("output rate: " + counter);
                         counter = 0;
@@ -84,32 +71,5 @@ public class WikipediaGenerator {
             }
         }
         producer.close();
-        //logger.info("LatencyLog: " + String.valueOf(System.currentTimeMillis() - time));
-    }
-
-    public static void main(String[] args) throws InterruptedException {
-        String TOPIC = new String("wikipedia");
-        String file = new String("wikipedia-raw");
-        int speed = 1;
-        if (args.length > 0) {
-            TOPIC = args[0];
-            file = args[1];
-            speed = Integer.parseInt(args[2]);
-        }
-//        new WikipediaGenerator(TOPIC).generate(file, speed);
-
-        // Start group of User Consumer Thread
-        WikipediaThread wikipediaProducer = new WikipediaThread("wikipedia", "172.28.176.136:9092");
-        WikipediaThread wikinewsProducer = new WikipediaThread("wikinews","172.28.176.136:9092");
-        WikipediaThread wiktionaryProducer = new WikipediaThread("wiktionary","172.28.176.136:9092");
-
-        Thread t1 = new Thread(wikipediaProducer);
-        t1.start();
-
-        Thread t2 = new Thread(wikinewsProducer);
-        t2.start();
-
-        Thread t3 = new Thread(wiktionaryProducer);
-        t3.start();
     }
 }
