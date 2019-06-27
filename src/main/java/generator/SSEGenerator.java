@@ -26,7 +26,7 @@ public class SSEGenerator {
     public SSEGenerator(String input) {
         TOPIC = input;
         Properties props = new Properties();
-        props.put("bootstrap.servers", "alligator-sane.d2.comp.nus.edu.sg:9092");
+        props.put("bootstrap.servers", "kafka-server-1:9092");
         props.put("client.id", "ProducerExample");
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
@@ -48,10 +48,10 @@ public class SSEGenerator {
         long interval = 0;
         int counter = 0;
         try {
-            stream = new FileReader("/root/SSE-kafka-producer/"+file+".txt");
+            stream = new FileReader("/home/myc/workspace_backup/"+file+".txt");
             br = new BufferedReader(stream);
 
-            interval = 1000000000/200;
+            interval = 1000000000/speed;
             start = System.nanoTime();
 
             while ((sCurrentLine = br.readLine()) != null) {

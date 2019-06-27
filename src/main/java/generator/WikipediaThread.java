@@ -13,9 +13,11 @@ import java.util.Properties;
 public class WikipediaThread implements Runnable {
 
     private String TOPIC;
+    private int speed;
     private static KafkaProducer<String, String> producer;
 
-    public WikipediaThread(String input, String brokers) {
+    public WikipediaThread(String input, String brokers, int speed) {
+	this.speed = speed;
         this.TOPIC = input;
         Properties props = new Properties();
         props.put("bootstrap.servers", brokers);
@@ -43,7 +45,7 @@ public class WikipediaThread implements Runnable {
                 stream = new FileReader("/home/myc/workspace/cs5101-experiment/src/main/java/generator/wikipedia-raw.json");
                 br = new BufferedReader(stream);
 
-                interval = 1000000000 / 90;
+                interval = 1000000000 / this.speed;
                 start = System.nanoTime();
 
                 while ((sCurrentLine = br.readLine()) != null) {

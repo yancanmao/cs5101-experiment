@@ -92,16 +92,16 @@ public class WikipediaGenerator {
         String file = new String("wikipedia-raw");
         int speed = 1;
         if (args.length > 0) {
-            TOPIC = args[0];
-            file = args[1];
-            speed = Integer.parseInt(args[2]);
+            //TOPIC = args[0];
+            //file = args[1];
+            speed = Integer.parseInt(args[0]);
         }
 //        new WikipediaGenerator(TOPIC).generate(file, speed);
 
         // Start group of User Consumer Thread
-        WikipediaThread wikipediaProducer = new WikipediaThread("wikipedia", "172.28.176.136:9092");
-        WikipediaThread wikinewsProducer = new WikipediaThread("wikinews","172.28.176.136:9092");
-        WikipediaThread wiktionaryProducer = new WikipediaThread("wiktionary","172.28.176.136:9092");
+        WikipediaThread wikipediaProducer = new WikipediaThread("wikipedia", "kafka-server-1:9092", speed);
+        WikipediaThread wikinewsProducer = new WikipediaThread("wikinews","kafka-server-1:9092", speed);
+        WikipediaThread wiktionaryProducer = new WikipediaThread("wiktionary","kafka-server-1:9092", speed);
 
         Thread t1 = new Thread(wikipediaProducer);
         t1.start();
