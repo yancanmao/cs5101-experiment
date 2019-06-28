@@ -158,7 +158,7 @@ public class WikipediaApplication implements StreamApplication, Serializable {
                     imStreamIn3.map(KV::getValue)));
 
 //      MessageStream<WikipediaEvent> allWikipediaEvents =
-//              MessageStream.mergeAll(ImmutableList.of(
+//             MessageStream.mergeAll(ImmutableList.of(
 //                      wikipediaEvents.map(this::preprocess).map(KV::getValue),
 //                      wikinewsEvents.map(this::preprocess).map(KV::getValue),
 //                      wiktionaryEvents.map(this::preprocess).map(KV::getValue)));
