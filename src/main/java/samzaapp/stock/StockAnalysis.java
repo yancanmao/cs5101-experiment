@@ -31,7 +31,7 @@ import org.apache.samza.util.CommandLine;
 import org.apache.samza.util.Util;
 import java.util.Random;
 
-public class StockAnalysis implements StreamApplication {
+public class StockAnalysis implements StreamApplication, Serializable {
     private static final int Trade_No = 0;
     private static final int Trade_Date = 1;
     private static final int Trade_Time = 2;
@@ -70,8 +70,7 @@ public class StockAnalysis implements StreamApplication {
     private static final String INPUT_STREAM_ID = "stock_order";
     private static final String INPUT_STREAM_ID_2 = "im_stream";
     private static final String OUTPUT_STREAM_ID2 = "im_stream";
-    private static final String OUTPUT_STREAM_ID = "stock";
-
+    private static final String OUTPUT_STREAM_ID = "stock_analysis";
 
     @Override
     public void describe(StreamApplicationDescriptor streamApplicationDescriptor) {
@@ -107,12 +106,13 @@ public class StockAnalysis implements StreamApplication {
         // "transactor"
         inputStream
             .map(order -> {
-                Double number = messageGenerator.nextGaussian(10, 1);
+                Double number = messageGenerator.nextGaussian(5, 1);
                 int delay = number.intValue();
-                long start = System.currentTimeMillis();
-                while (System.currentTimeMillis() - start < delay + 10){}
+                long start = System. nanoTime();
+                while (System.nanoTime() - start < (delay*30000)){}
                 return order;
-            }).sendTo(imStreamOut);
+            })
+//            .sendTo(imStreamOut);
 
 //        //  movingAverage
 //        imStreamIn
@@ -120,7 +120,7 @@ public class StockAnalysis implements StreamApplication {
 //                String[] orderArr = order.getValue().split("\\|");
 //                return new KV(order.getKey(), orderArr);
 //            })
-//            .map(this::movingAverage)
+//                .map(this::movingAverage)
 //            .sendTo(outputStream);
 //
 //        // composite index
@@ -142,8 +142,12 @@ public class StockAnalysis implements StreamApplication {
 //            .sendTo(outputStream);
 
         // fraud detection
-        imStreamIn
+//        imStreamIn
             .map(order -> {
+                Double number = messageGenerator.nextGaussian(10, 2);
+                int delay = number.intValue();
+                long start = System. nanoTime();
+                while (System.nanoTime() - start < (delay*50000)){}
                 String[] orderArr = order.getValue().split("\\|");
                 return new KV(order.getKey(), orderArr);
             })
@@ -158,7 +162,7 @@ public class StockAnalysis implements StreamApplication {
         }
         float sum = stockAvgPriceMap.get(orderArr[Sec_Code]) + Float.parseFloat(orderArr[Trade_Price]);
         stockAvgPriceMap.put(orderArr[Sec_Code], sum);
-        return new KV(m.getKey(), String.valueOf(sum));
+        return new KV(String.valueOf(m.getKey()), String.valueOf(sum));
     }
 
     private KV<String, String> compositeIndex(KV m) {
@@ -182,7 +186,7 @@ public class StockAnalysis implements StreamApplication {
         String[] orderArr = (String[]) m.getValue();
         // design a kmeans algorithm here
         List<TradedOrder> centroids = new ArrayList<>();
-        TradedOrder tradedOrder = new TradedOrder(Integer.parseInt(orderArr[Trade_Price])*1000, Integer.parseInt(orderArr[Trade_Vol]));
+        TradedOrder tradedOrder = new TradedOrder(Float.valueOf(orderArr[Trade_Price])*1000, Float.valueOf(orderArr[Trade_Vol]));
 
         Random ra =new Random();
         for (int i=0; i<kmeansKernels; i++) {
@@ -190,10 +194,10 @@ public class StockAnalysis implements StreamApplication {
         }
         findCloest(tradedOrder, centroids);
         computeMedian(centroids);
-        return new KV(m.getKey(), "fraud detection stage");
+        return new KV(m.getKey(), "fraud detection!");
     }
 
-    private int findCloest(TradedOrder tradedOrder, List<TradedOrder> centroids) {
+    private void findCloest(TradedOrder tradedOrder, List<TradedOrder> centroids) {
         int bestIndex = 0;
         Double cloest = Double.POSITIVE_INFINITY;
         for (int i=0; i<centroids.size(); i++) {
@@ -203,7 +207,7 @@ public class StockAnalysis implements StreamApplication {
                 bestIndex = i;
             }
         }
-        return bestIndex;
+//        return bestIndex;
     }
 
     private void computeMedian(List<TradedOrder> centroids) {
@@ -222,11 +226,11 @@ public class StockAnalysis implements StreamApplication {
         return (var1.tradePrice - var2.tradePrice) * (var1.tradePrice - var2.tradePrice) + (var1.tradeVol - var2.tradeVol);
     }
 
-    static class TradedOrder {
-        public int tradePrice;
-        public int tradeVol;
+    static class TradedOrder implements Serializable {
+        public float tradePrice;
+        public float tradeVol;
 
-        public TradedOrder(int tradePrice, int tradeVol) {
+        public TradedOrder(float tradePrice, float tradeVol) {
             this.tradePrice = tradePrice;
             this.tradeVol = tradeVol;
         }

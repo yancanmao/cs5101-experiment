@@ -40,7 +40,7 @@ public class SSECJGenerator {
     public SSECJGenerator(String input) {
         TOPIC = input;
         Properties props = new Properties();
-        props.put("bootstrap.servers", "kafka-server-1:9092");
+        props.put("bootstrap.servers", "localhost:9092");
         props.put("client.id", "ProducerExample");
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
@@ -62,7 +62,7 @@ public class SSECJGenerator {
         long interval = 0;
         int counter = 0;
         try {
-            stream = new FileReader("/home/myc/workspace_backup/"+file+".txt");
+            stream = new FileReader("/root/SSE-kafka-producer/"+file+".txt");
             br = new BufferedReader(stream);
 
             interval = 1000000000/speed;
@@ -105,15 +105,15 @@ public class SSECJGenerator {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        String TOPIC = new String("stock");
-        String file = new String("partition1");
+        String TOPIC = new String("stock_order");
+        String file = new String("sort_CJ");
         int speed = 1;
         if (args.length > 0) {
-            TOPIC = args[0];
-            file = args[1];
-            speed = Integer.parseInt(args[2]);
+//            TOPIC = args[0];
+//            file = args[1];
+            speed = Integer.parseInt(args[0]);
         }
-        new SSEGenerator(TOPIC).generate(file, speed);
+        new SSECJGenerator(TOPIC).generate(file, speed);
     }
 }
 
